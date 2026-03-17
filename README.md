@@ -9,7 +9,7 @@ Atomic Dev enriches your development workflow with session-aware AI-generated do
 ## Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/guilleastr/atomicdev/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/guilleastr/atomicdev/master/install.sh | sh
 ```
 
 The installer auto-detects which IDE conventions exist in your repo and pre-selects them as install targets — detected directories are highlighted in green:

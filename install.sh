@@ -1,11 +1,11 @@
 #!/bin/sh
 # Atomic Dev installer
-# Usage:   curl -sSL https://raw.githubusercontent.com/guilleastr/atomicdev/main/install.sh | sh
+# Usage:   curl -sSL https://raw.githubusercontent.com/guilleastr/atomicdev/master/install.sh | sh
 # Options: curl -sSL .../install.sh | sh -s -- --update --dry-run --cleanup
 
 set -e
 
-REPO="https://raw.githubusercontent.com/guilleastr/atomicdev/main"
+REPO="https://raw.githubusercontent.com/guilleastr/atomicdev/master"
 SKILLS="atomicdev-core atomicdev-code-explorer atomicdev-planner atomicdev-code-implementation atomicdev-docs-creator"
 VERSION="0.1.0"
 
