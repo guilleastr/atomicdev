@@ -1,0 +1,60 @@
+#!/bin/sh
+# Atomic Dev pre-commit hook
+# Triggers Docs Creator when changes are committed inside an agent session.
+
+set -e
+
+SKILLS_DIR=".agents/skills"
+SESSION_FILE=".agents/session.json"
+CHANGED=$(git diff --cached --name-only)
+
+# Skip if no files changed
+if [ -z "$CHANGED" ]; then
+  exit 0
+fi
+
+# Skip if Atomic Dev is not installed
+if [ ! -d "$SKILLS_DIR" ]; then
+  exit 0
+fi
+
+# Determine mode
+if [ -f "$SESSION_FILE" ]; then
+  MODE="session"
+else
+  MODE="diff-only"
+fi
+
+# Run Docs Creator via the configured IDE CLI
+# Claude Code
+if command -v claude >/dev/null 2>&1; then
+  if [ "$MODE" = "session" ]; then
+    claude --skill docs-creator --context "$SESSION_FILE" --diff "$CHANGED"
+  else
+    claude --skill docs-creator --diff "$CHANGED"
+  fi
+# GitHub Copilot (via gh CLI extension)
+elif command -v gh >/dev/null 2>&1 && gh extension list 2>/dev/null | grep -q "copilot"; then
+  if [ "$MODE" = "session" ]; then
+    gh copilot skill docs-creator --context "$SESSION_FILE" --diff "$CHANGED"
+  else
+    gh copilot skill docs-creator --diff "$CHANGED"
+  fi
+else
+  # Fallback — print a reminder if no CLI is available
+  echo "[Atomic Dev] No agent CLI detected. Docs Creator skipped."
+  echo "[Atomic Dev] Install Claude Code or GitHub Copilot CLI to enable automatic documentation."
+  exit 0
+fi
+
+# Stage any updated skill artifacts
+if [ -d "$SKILLS_DIR" ]; then
+  git add "$SKILLS_DIR/"
+fi
+
+# Discard session context after successful commit
+if [ -f "$SESSION_FILE" ]; then
+  rm "$SESSION_FILE"
+fi
+
+exit 0
