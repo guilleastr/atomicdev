@@ -1,12 +1,9 @@
 ---
 name: atomicdev-core
-description: "Bootstrap skill for the Atomic Dev framework. Read this before doing anything else in this repository. Defines the workflow, session model, and skill ownership for all agent activity."
-priority: first
+description: Framework governance and workflow definition. Defines how the Atomic Dev system operates. Read this first before any other skill.
 ---
 
-# AtomicDev
-
-You are the foundational skill of the Atomic Dev framework. Every agent operating in this repository reads this skill first, before any other.
+# Atomic Dev Core
 
 ## Your Two Roles
 
@@ -16,20 +13,13 @@ You define how the Atomic Dev system operates in this repository. All other skil
 **The Atomic Dev workflow:**
 
 1. A developer expresses an intent — a natural language description of what they want to achieve.
-2. The **Planner** receives the intent and orchestrates the session.
+2. The **Planner** receives the intent and plans the work.
 3. The **Code Explorer** maps the relevant parts of the codebase.
 4. The **Planner** compiles a draft plan and presents it to the three judges for confidence assessment.
 5. If confidence is below threshold, the three judges deliberate until consensus or the Planner decides.
 6. The **Code Implementation** skill executes the plan, verifies the result, and explains what it did.
 7. The developer accepts or rejects the changes.
-8. On accept, the pre-commit hook triggers **Docs Creator**, which updates skill artifacts and generates the commit message.
-9. The session closes. Context is discarded.
-
-**Session rules:**
-- Sessions are scoped to a git branch.
-- A suspended session (IDE closed mid-session) is resumed when the IDE reopens.
-- A session closes only when a commit is made or the developer explicitly abandons it.
-- Session context lives in `.agents/session.json` — gitignored, ephemeral.
+8. On accept, the pre-commit hook triggers **Docs Creator**, which generates documentation and the commit message.
 
 ### 2. Skill Creation and Ownership
 You are the only skill with authority to create, modify, or retire framework-level skills. You distinguish between:
@@ -38,7 +28,7 @@ You are the only skill with authority to create, modify, or retire framework-lev
 - **Repo skills** — owned by the repository. These emerge from the specific codebase — domain patterns, project conventions, team workflows. They are generated in response to developer requests or Planner-detected gaps.
 
 **When to create a new skill:**
-- A recurring pattern spans multiple files and sessions → create a repo skill.
+- A recurring pattern spans multiple files and different contexts → create a repo skill.
 - The Planner repeatedly cannot plan adequately for a category of task → create a repo skill.
 - A developer explicitly requests it → create the skill, human reviews before commit.
 - A one-off convention → do not create a skill. Document it inline.
@@ -56,6 +46,52 @@ You are the only skill with authority to create, modify, or retire framework-lev
 | Planner | `atomicdev-planner/` | Orchestration, confidence assessment, deliberation |
 | Code Implementation | `atomicdev-code-implementation/` | Execution, verification, self-accounting explanation |
 | Docs Creator | `atomicdev-docs-creator/` | Event-driven documentation and commit generation |
+
+## Framework Configuration
+
+Runtime behaviour is defined in `.atomicdev/context/.env.atomicdev` (committed to git, shared across team):
+
+```json
+{
+  "framework": {
+    "version": "0.1.0",
+    "name": "Atomic Dev"
+  },
+  "paths": {
+    "wiki_path": "./docs/wiki",
+    "artifacts_path": "./.agents/artifacts",
+    "outputs_path": "./docs/generated"
+  },
+  "documentation": {
+    "commit_message_template": "atomic-dev"
+  },
+  "integrations": {
+    "enabled_services": ["git", "pre-commit"],
+    "external_wiki": null
+  },
+  "behavior": {
+    "auto_create_repo_skills": true
+  }
+}
+```
+
+### Configuration Keys
+
+| Key | Purpose | Default |
+|---|---|---|
+| `framework.version` | Framework version compatibility check | `0.1.0` |
+| `paths.wiki_path` | Where generated documentation is stored | `./docs/wiki` |
+| `paths.artifacts_path` | Internal artifacts directory | `./.agents/artifacts` |
+| `paths.outputs_path` | Build outputs and generated content | `./docs/generated` |
+
+| `documentation.commit_message_template` | Commit message style | `atomic-dev` |
+| `integrations.enabled_services` | Enabled integrations (git, pre-commit, webhooks) | `["git", "pre-commit"]` |
+| `integrations.external_wiki` | External wiki URL (Notion, Confluence, etc.) | `null` |
+| `behavior.auto_create_repo_skills` | Planner auto-creates repo skills on demand | `true` |
+
+For team-specific or local overrides, create `.atomicdev/context/.env.atomicdev.local` (gitignored).
+
+## Guiding Principles
 
 ## Guiding Principles
 

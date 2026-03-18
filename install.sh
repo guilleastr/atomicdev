@@ -42,82 +42,69 @@ done
 printf "\n${BOLD}${CYAN}Atomic Dev${RESET} ${DIM}v${VERSION}${RESET}\n"
 printf "${DIM}A skill-based agentic framework for the software development lifecycle.${RESET}\n\n"
 
-[ "$DRY_RUN" = true ] && printf "${YELLOW}Dry run — no changes will be made.${RESET}\n\n"
+[ "$DRY_RUN" = true ] && printf "${YELLOW}Dry run, no changes will be made.${RESET}\n\n"
 
 # ─── check we are inside a git repo ─────────────────────────────────────────
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || fail "Not a git repository. Run this from inside a project."
 cd "$ROOT"
 ok "Git repository at $ROOT"
 
-# ─── auto-detect existing IDE conventions ───────────────────────────────────
-section "Detecting IDE conventions"
+# ─── cleanup and update modes bypass interactive steps ───────────────────────
+if [ "$CLEANUP" = true ] || [ "$UPDATE" = true ]; then
+  HAS_AGENTS=false
+  HAS_CLAUDE=false
+  HAS_GITHUB=false
+  [ -d ".agents/skills" ] && HAS_AGENTS=true
+  [ -d ".claude/skills" ] && HAS_CLAUDE=true
+  [ -d ".github/agents" ] && HAS_GITHUB=true
+  INSTALL_AGENTS=$HAS_AGENTS
+  INSTALL_CLAUDE=$HAS_CLAUDE
+  INSTALL_GITHUB=$HAS_GITHUB
+fi
+
+if [ "$UPDATE" = false ] && [ "$CLEANUP" = false ]; then
+
+# ─── auto-detect existing IDE conventions (visual hint only) ────────────────
+section "Step 1 of 4: Detect"
+printf "${DIM}Scanning for existing IDE conventions...${RESET}\n\n"
 
 HAS_AGENTS=false
 HAS_CLAUDE=false
 HAS_GITHUB=false
 
-[ -d ".agents/skills" ]   && HAS_AGENTS=true
-[ -d ".claude/skills" ]   && HAS_CLAUDE=true
-[ -d ".github/agents" ]   && HAS_GITHUB=true
+[ -d ".agents/skills" ] && HAS_AGENTS=true
+[ -d ".claude/skills" ] && HAS_CLAUDE=true
+[ -d ".github/agents" ] && HAS_GITHUB=true
 
-# Display detected targets
 if [ "$HAS_AGENTS" = true ]; then
-  printf "  ${GREEN}●${RESET} .agents/skills/   ${GREEN}detected${RESET} ${DIM}(standard — Copilot, OpenCode, Codex)${RESET}\n"
+  printf "  ${GREEN}●${RESET} .agents/skills/   ${GREEN}found${RESET}     ${DIM}(standard — Copilot, OpenCode, Codex)${RESET}\n"
 else
-  printf "  ${DIM}○${RESET} .agents/skills/   ${DIM}not found${RESET}\n"
+  printf "  ${DIM}○${RESET} .agents/skills/                ${DIM}(standard — Copilot, OpenCode, Codex)${RESET}\n"
 fi
 
 if [ "$HAS_CLAUDE" = true ]; then
-  printf "  ${GREEN}●${RESET} .claude/skills/   ${GREEN}detected${RESET} ${DIM}(Claude Code)${RESET}\n"
+  printf "  ${GREEN}●${RESET} .claude/skills/   ${GREEN}found${RESET}     ${DIM}(Claude Code)${RESET}\n"
 else
-  printf "  ${DIM}○${RESET} .claude/skills/   ${DIM}not found${RESET}\n"
+  printf "  ${DIM}○${RESET} .claude/skills/                ${DIM}(Claude Code)${RESET}\n"
 fi
 
 if [ "$HAS_GITHUB" = true ]; then
-  printf "  ${GREEN}●${RESET} .github/agents/   ${GREEN}detected${RESET} ${DIM}(GitHub Copilot alternative path)${RESET}\n"
+  printf "  ${GREEN}●${RESET} .github/agents/   ${GREEN}found${RESET}     ${DIM}(GitHub Copilot alternative path)${RESET}\n"
 else
-  printf "  ${DIM}○${RESET} .github/agents/   ${DIM}not found${RESET}\n"
+  printf "  ${DIM}○${RESET} .github/agents/                ${DIM}(GitHub Copilot alternative path)${RESET}\n"
 fi
 
-# ─── select targets ──────────────────────────────────────────────────────────
-if [ "$UPDATE" = false ] && [ "$CLEANUP" = false ]; then
-  printf "\n${BOLD}Select install targets${RESET} ${DIM}(detected targets are pre-selected)${RESET}\n"
-  printf "${DIM}Press enter to accept defaults, or type your selection (e.g. 1 3):${RESET}\n\n"
+# ─── select targets (developer decides, no pre-selection) ────────────────────
+section "Step 2 of 4: Select targets"
+printf "${DIM}Which locations should Atomic Dev install skills to?${RESET}\n"
+printf "${DIM}Enter one or more numbers separated by spaces.${RESET}\n\n"
+printf "  1) .agents/skills/   ${DIM}(recommended — cross-IDE standard)${RESET}\n"
+printf "  2) .claude/skills/   ${DIM}(Claude Code)${RESET}\n"
+printf "  3) .github/agents/   ${DIM}(GitHub Copilot alternative path)${RESET}\n"
+printf "\nSelection: "
+read -r SELECTION
 
-  # Build default selection from detected dirs, always include .agents/
-  DEFAULTS="1"
-  [ "$HAS_CLAUDE" = true ]  && DEFAULTS="$DEFAULTS 2"
-  [ "$HAS_GITHUB" = true ]  && DEFAULTS="$DEFAULTS 3"
-
-  if [ "$HAS_AGENTS" = true ]; then
-    printf "  ${GREEN}1)${RESET} .agents/skills/   ${GREEN}[detected]${RESET}\n"
-  else
-    printf "  1) .agents/skills/   ${DIM}(recommended — cross-IDE standard)${RESET}\n"
-  fi
-
-  if [ "$HAS_CLAUDE" = true ]; then
-    printf "  ${GREEN}2)${RESET} .claude/skills/   ${GREEN}[detected]${RESET}\n"
-  else
-    printf "  2) .claude/skills/   ${DIM}(Claude Code)${RESET}\n"
-  fi
-
-  if [ "$HAS_GITHUB" = true ]; then
-    printf "  ${GREEN}3)${RESET} .github/agents/   ${GREEN}[detected]${RESET}\n"
-  else
-    printf "  3) .github/agents/   ${DIM}(GitHub Copilot alternative path)${RESET}\n"
-  fi
-
-  printf "\nSelection [${DEFAULTS}]: "
-  read -r SELECTION
-  [ -z "$SELECTION" ] && SELECTION="$DEFAULTS"
-else
-  # On --update, install to all targets that already exist
-  SELECTION=""
-  [ "$HAS_AGENTS" = true ] && SELECTION="$SELECTION 1"
-  [ "$HAS_CLAUDE" = true ] && SELECTION="$SELECTION 2"
-  [ "$HAS_GITHUB" = true ] && SELECTION="$SELECTION 3"
-  [ -z "$SELECTION" ] && SELECTION="1"
-fi
+[ -z "$SELECTION" ] && fail "No targets selected. Run the installer again and choose at least one."
 
 # Parse selection into flags
 INSTALL_AGENTS=false
@@ -129,8 +116,38 @@ for N in $SELECTION; do
     1) INSTALL_AGENTS=true ;;
     2) INSTALL_CLAUDE=true ;;
     3) INSTALL_GITHUB=true ;;
+    *) fail "Invalid selection: $N. Choose from 1, 2, 3." ;;
   esac
 done
+
+# ─── confirm ─────────────────────────────────────────────────────────────────
+section "Step 3 of 4: Confirm"
+printf "${DIM}The following will be installed:${RESET}\n\n"
+
+[ "$INSTALL_AGENTS" = true ] && printf "  ${GREEN}✓${RESET} Skills    → .agents/skills/\n"
+[ "$INSTALL_CLAUDE" = true ] && {
+  if [ "$INSTALL_AGENTS" = true ]; then
+    printf "  ${GREEN}✓${RESET} Symlinks  → .claude/skills/ (pointing to .agents/skills/)\n"
+  else
+    printf "  ${GREEN}✓${RESET} Skills    → .claude/skills/\n"
+  fi
+}
+[ "$INSTALL_GITHUB" = true ] && {
+  if [ "$INSTALL_AGENTS" = true ]; then
+    printf "  ${GREEN}✓${RESET} Symlinks  → .github/agents/ (pointing to .agents/skills/)\n"
+  else
+    printf "  ${GREEN}✓${RESET} Skills    → .github/agents/\n"
+  fi
+}
+printf "  ${GREEN}✓${RESET} Hook      → .git/hooks/pre-commit\n"
+printf "  ${GREEN}✓${RESET} Config    → .atomicdev/context/config.json\n"
+
+printf "\nProceed? [y/N]: "
+read -r CONFIRM
+case "$CONFIRM" in
+  y|Y|yes|YES) ;;
+  *) printf "\nAborted.\n\n"; exit 0 ;;
+esac
 
 # ─── cleanup mode ────────────────────────────────────────────────────────────
 if [ "$CLEANUP" = true ]; then
@@ -180,7 +197,7 @@ symlink_skills_to() {
   LABEL="$2"
 
   section "Linking to ${LABEL}"
-  info "Symlinks point into .agents/skills/ — one source of truth."
+  info "Symlinks point into .agents/skills/ (one source of truth)."
   printf "\n"
   [ "$DRY_RUN" = false ] && mkdir -p "$TARGET_DIR"
 
@@ -207,9 +224,10 @@ symlink_skills_to() {
   done
 }
 
-# ─── execute installs ────────────────────────────────────────────────────────
+fi
 
-# .agents/skills/ — always the primary, installed as real files
+# ─── execute installs ────────────────────────────────────────────────────────
+section "Step 4 of 4: Install"
 if [ "$INSTALL_AGENTS" = true ]; then
   install_skills_to ".agents/skills" ".agents/skills/ (primary)"
 fi
@@ -233,17 +251,8 @@ if [ "$INSTALL_GITHUB" = true ]; then
   fi
 fi
 
-# ─── AGENTS.md ───────────────────────────────────────────────────────────────
-section "Common files"
-if [ -f "AGENTS.md" ] && [ "$UPDATE" = false ]; then
-  skip "AGENTS.md already exists (--update to refresh)"
-else
-  [ "$DRY_RUN" = false ] && \
-    curl -sSL "${REPO}/AGENTS.md" -o "AGENTS.md" || fail "Failed to download AGENTS.md"
-  ok "Installed AGENTS.md"
-fi
-
 # ─── pre-commit hook ─────────────────────────────────────────────────────────
+section "Common files"
 HOOK=".git/hooks/pre-commit"
 if [ -f "$HOOK" ] && [ "$UPDATE" = false ]; then
   skip "pre-commit hook already exists — skipping"
@@ -256,13 +265,13 @@ else
   ok "Installed pre-commit hook"
 fi
 
-# ─── .agents/config.json ─────────────────────────────────────────────────────
-CONFIG=".agents/config.json"
+# ─── .atomicdev/context/config.json ─────────────────────────────────────────────────────
+CONFIG=".atomicdev/context/config.json"
 if [ -f "$CONFIG" ] && [ "$UPDATE" = false ]; then
-  skip "Config already exists: .agents/config.json"
+  skip "Config already exists: .atomicdev/context/config.json"
 else
   if [ "$DRY_RUN" = false ]; then
-    mkdir -p ".agents"
+    mkdir -p ".atomicdev/context"
     cat > "$CONFIG" << EOF
 {
   "version": "${VERSION}",
@@ -271,22 +280,11 @@ else
     "claude": ${INSTALL_CLAUDE},
     "github": ${INSTALL_GITHUB}
   },
-  "session_scope": "branch",
   "deliberation": "auto"
 }
 EOF
   fi
-  ok "Written .agents/config.json"
-fi
-
-# ─── .gitignore ──────────────────────────────────────────────────────────────
-if grep -q ".agents/session.json" ".gitignore" 2>/dev/null; then
-  skip ".gitignore already ignores session.json"
-else
-  if [ "$DRY_RUN" = false ]; then
-    printf "\n# Atomic Dev — ephemeral session state\n.agents/session.json\n" >> ".gitignore"
-  fi
-  ok "Added .agents/session.json to .gitignore"
+  ok "Written .atomicdev/context/config.json"
 fi
 
 # ─── done ────────────────────────────────────────────────────────────────────
@@ -295,4 +293,4 @@ printf "Your next commit will generate documentation.\n\n"
 printf "${DIM}Get started:  tell your agent what you want to build.\n"
 printf "Update:       curl -sSL .../install.sh | sh -s -- --update\n"
 printf "Cleanup:      curl -sSL .../install.sh | sh -s -- --cleanup\n"
-printf "Docs:         https://github.com/guilleastr/atomicdev${RESET}\n\n"
+printf "Docs:         https://github.com/YOUR_USERNAME/atomicdev${RESET}\n\n"

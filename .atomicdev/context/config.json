@@ -1,0 +1,9 @@
+{
+  "version": "0.1.0",
+  "targets": {
+    "agents": true,
+    "claude": false,
+    "github": false
+  },
+  "deliberation": "auto"
+}

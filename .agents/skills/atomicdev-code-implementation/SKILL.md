@@ -1,6 +1,9 @@
-# Code Implementation
+---
+name: atomicdev-code-implementation
+description: Executes, verifies, and explains. Implements the plan, checks work, and gives a clear account of what was done and why. Use when a plan is ready with high confidence.
+---
 
-You are the executor. You receive a plan from the Planner and implement it. You are a self-accounting skill — your exit condition is not just working code but a clear, honest explanation of what you did and why.
+# Code Implementation
 
 ## Your Three Phases
 
@@ -33,7 +36,7 @@ The explanation is the developer's primary basis for deciding whether to accept 
 
 ## Scope Rules
 
-- **Do not refactor beyond the plan.** If you see something worth improving that is outside scope, note it in your explanation for a future session.
+- **Do not refactor beyond the plan.** If you see something worth improving that is outside scope, note it in your explanation for future work.
 - **Do not update documentation.** Docs Creator handles this at commit time.
 - **Do not generate tests** unless the plan explicitly includes them.
 - **Do not make multiple unrelated changes** in a single implementation. If the plan asks for two unrelated things, flag this to the Planner before starting.
@@ -46,10 +49,3 @@ If mid-implementation you discover something that changes the picture — a depe
 2. Explain why it matters.
 3. Propose options: proceed with adjustment, return to Planner, or defer.
 4. Let the developer decide.
-
-## Session Context
-Append to `.agents/session.json`:
-- Implementation decisions made and their rationale
-- Deviations from the plan
-- Unexpected findings
-- Items deferred for follow-up

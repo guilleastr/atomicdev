@@ -2,7 +2,7 @@
 
 **A skill-based agentic framework for the software development lifecycle.**
 
-Atomic Dev enriches your development workflow with session-aware AI-generated documentation, versioned as first-class artifacts and integrated into git. Five composable baseline skills form a lightweight agent team that grows with your repository. Code and documentation commit together, automatically.
+Atomic Dev enriches your development workflow with AI-generated documentation, versioned as first-class artifacts and integrated into git. Five composable baseline skills form a lightweight agent team that grows with your repository. Code and documentation commit together, automatically.
 
 ---
 
@@ -50,18 +50,9 @@ Framework skills are prefixed with `atomicdev-`. Repo-specific skills carry no p
 |---|---|---|
 | **AtomicDev Core** | `atomicdev-core/` | Workflow definition and skill ownership. Read first. |
 | **Code Explorer** | `atomicdev-code-explorer/` | Spatial navigation — where things are and how they connect. |
-| **Planner** | `atomicdev-planner/` | Orchestrates the session, assesses plan confidence, runs deliberation. |
+| **Planner** | `atomicdev-planner/` | Plans the work, assesses confidence, runs deliberation. |
 | **Code Implementation** | `atomicdev-code-implementation/` | Executes, verifies, and explains what it did and why. |
-| **Docs Creator** | `atomicdev-docs-creator/` | Triggered by pre-commit hook. Updates skill timelines, writes commit messages. |
-
-### The Session Model
-
-A session is one unit of developer intent — it starts when you give the agent a task and ends when you commit or abandon the work.
-
-- **Branch-scoped** — switching branches does not carry session state across.
-- **Resumable** — closing your IDE mid-session suspends it. Reopening resumes it.
-- **Ephemeral** — session context lives in `.agents/session.json` (gitignored) and is discarded after a successful commit.
-- **Preserved in skills** — the knowledge captured during a session is baked into the skill artifacts committed alongside your code.
+| **Docs Creator** | `atomicdev-docs-creator/` | Triggered by pre-commit hook. Generates documentation and writes commit messages. |
 
 ### The Workflow
 
@@ -93,7 +84,7 @@ The Planner uses three agent judges to assess plan readiness before implementati
 - **The Architect** — does this fit the system design?
 - **The Skeptic** — what can go wrong?
 
-Minority concerns are preserved in the skill timeline, not discarded.
+Dissent is preserved in decision records and exposed to the developer, not discarded.
 
 ### Skills Grow With Your Repo
 
@@ -109,7 +100,7 @@ After installation:
 your-repo/
   .agents/
     skills/
-      atomicdev-core/         ← base meta-skill, read first
+      atomicdev-core/       ← base meta-skill, read first
         SKILL.md
       atomicdev-code-explorer/
         SKILL.md
@@ -119,12 +110,13 @@ your-repo/
         SKILL.md
       atomicdev-docs-creator/
         SKILL.md
-      [your-repo-skills/]     ← generated as your repo matures, no prefix
+      [your-repo-skills/]   ← generated as your repo matures, no prefix
         SKILL.md
-    config.json               ← your installation config
-    session.json              ← gitignored, ephemeral, discarded after commit
-  AGENTS.md                   ← system-wide instructions for all agents
-  .git/hooks/pre-commit       ← Docs Creator trigger
+  .atomicdev/
+    TIMELINE.md           ← repo-level timeline (committed, append-only)
+    config.json           ← generated at install time (committed)
+  AGENTS.md                ← system-wide instructions for all agents
+  .git/hooks/pre-commit    ← Docs Creator trigger
 ```
 
 ---

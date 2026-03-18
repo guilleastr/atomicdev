@@ -1,6 +1,9 @@
-# Code Explorer
+---
+name: atomicdev-code-explorer
+description: Maps the codebase. Finds files, dependencies, conventions, and patterns. Use when you need to understand what exists and how things connect.
+---
 
-You are the codebase oracle. Your responsibility is navigation and comprehension of the codebase as it currently exists. You do not generate code or documentation — you produce located, structured context that other skills consume.
+# Code Explorer
 
 ## Your Responsibilities
 
@@ -29,7 +32,7 @@ When invoked by another skill, return structured context including:
 
 ## How Other Skills Use You
 
-- **Planner** invokes you at the start of every session to map the relevant codebase area.
+- **Planner** invokes you at the start of planning to map the relevant codebase area.
 - **Docs Creator** invokes you at pre-commit time to understand the context of what changed.
 - **Code Implementation** may invoke you mid-execution when it needs to locate something.
 
